@@ -1,0 +1,7 @@
+.title {
+    color: white;
+    padding: 4px 8px;
+    font-size: 18px;
+    justify-content: space-between;
+    display: flex;
+}
