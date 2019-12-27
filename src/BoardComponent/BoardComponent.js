@@ -25,13 +25,14 @@ import { optimizeRes } from "../Utils/responseUtils";
 import { getDefaultData, bossOption } from "../Utils/ComponentDefaultData";
 import PageGlobalForm from "./PageGlobalForm";
 import TableComponent from "../Components/TableComponent/TableComponent";
+import ShareModal from './ShareModal'
 import BarForm, { defaultOption } from "../From/components/BarForm";
 
 const { TabPane } = Tabs;
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
 // 默认百分比
-const defaultPercent = 78;
+const defaultPercent = 74;
 
 const pageDefaultConfig = {
   lg: DEFAULT_LG, // 栅格数
@@ -76,6 +77,7 @@ export default class BoardComponent extends React.PureComponent {
       currentType: '', // 正在操作的组件类型(用于对应右侧表单结构)
       currentIndex: 'globalForm', // 正在操作的组件 key 值
       formOption: getOptionFormData(bossOption),
+      shareModal: false,
     };
   }
 
@@ -144,11 +146,13 @@ export default class BoardComponent extends React.PureComponent {
   // 点击菜单时，在页面新加一层组件
   handleMenuClick = (type, title) => {
     this.setState(({ items = [], selectedComponent }) => {
+      // 稍作处理：将最后一位的 i 即 key 值自增1 给下一位用，避免删除后重复
+      const data = items[items.length - 1] || { i: 0 };
       return {
         items: [
           ...items,
           {
-            i: String(items.length),
+            i: String(Number(data.i || 0) + 1),
             x: (items.length * CELL_WIDTH) % (this.state.cols || DEFAULT_LG),
             y: Infinity,
             w: CELL_WIDTH,
@@ -160,7 +164,7 @@ export default class BoardComponent extends React.PureComponent {
             dataConfig: {},
           },
         ],
-        selectedComponent: [...selectedComponent, { key: String(selectedComponent.length), title, type }],
+        selectedComponent: [...selectedComponent, { key: String(Number(data.i || 0) + 1), title, type }],
         currentType: type,
         currentIndex: String(items.length),
       }
@@ -186,7 +190,15 @@ export default class BoardComponent extends React.PureComponent {
   };
 
   // 移除一个元素组件
-  onRemoveItem = i => this.setState({ items: reject(this.state.items, { i: i }) });
+  onRemoveItem = i => {
+    delete this.dataSourceConfig[i];
+    delete this.childRefMap[i];
+    delete this.boardRefMap[i];
+    this.setState(({ selectedComponent, items }) => ({
+      items: reject(items, { i: i }),
+      selectedComponent: reject(selectedComponent, { key: String(i) }),
+    }));
+  };
 
   // 尺寸变更，同步更新组件视图
   onResize = (a, b) => {
@@ -282,14 +294,11 @@ export default class BoardComponent extends React.PureComponent {
   };
 
   // 更新正在编辑组件的类型
-  handleClickButton = (key, type) => {
-    this.setState({ currentType: type, currentIndex: key });
-  };
+  handleClickButton = (key, type) => this.setState({ currentType: type, currentIndex: key });
+
 
   // 还原为全局表单
-  changeCurrentIndex = () => {
-    this.setState({ currentIndex: 'globalForm' })
-  };
+  changeCurrentIndex = () => this.setState({ currentIndex: 'globalForm' });
 
   // 渲染已选组件，左侧菜单栏
   renderSelectedComponent = (selectedComponent = []) => {
@@ -315,6 +324,7 @@ export default class BoardComponent extends React.PureComponent {
 
     return (
       <div style={{ height: '100vh', backgroundColor: 'black' }}>
+        <ShareModal visible={this.state.shareModal} onCancel={() => this.setState({ shareModal: false })} />
         <div style={{ width: '100vw', display: 'flex', backgroundColor: '#1d1e1f', color: '#eaeaea' }}>
           <div className="go-back">
             <TooltipIcon iconType="left" text="返回" />
@@ -336,6 +346,9 @@ export default class BoardComponent extends React.PureComponent {
             <div className="icon-cell" onClick={this.handleToReview}>
               <Icon style={{ fontSize: 18 }} type="desktop" />
             </div>
+            <div className="icon-cell" onClick={() => this.setState({ shareModal: true })}>
+              <Icon style={{ fontSize: 18 }} type="share-alt" />
+            </div>
           </div>
         </div>
         <div style={{ display: 'flex' }}>
@@ -349,12 +362,12 @@ export default class BoardComponent extends React.PureComponent {
             <div className="main-content">
               <div style={{
                 backgroundColor: pageConfig.backgroundColor,
-                transform: `scale(${percent / 100})`,
+                transform: `translate(-242px, -112px) scale(${percent / 100})`,
                 height: DEFAULT_HEIGHT,
                 width: DEFAULT_WIDTH,
               }}>
                 <ResponsiveReactGridLayout
-                  style={{ width: 'calc(100vw - 480px)' }}
+                  transformScale={percent / 100}
                   onResize={this.onResize}
                   onResizeStop={this.onResizeStop}
                   onLayoutChange={this.onLayoutChange}

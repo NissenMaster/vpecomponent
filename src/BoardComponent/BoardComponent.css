@@ -51,9 +51,9 @@
     height: calc(100vh - 80px);
     width: calc(100vw - 480px);
     padding: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /*display: flex;*/
+    /*align-items: center;*/
+    /*justify-content: center;*/
     /*overflow: auto;*/
 }
 

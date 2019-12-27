@@ -70,7 +70,7 @@ class BarForm extends PureComponent {
               {/*  rules: [{ required: true, message: 'showTitle is required!' }],*/}
               {/*})(<Input style={{ marginBottom: 8 }} />)}*/}
               <label>副标题内容</label>
-              {getFieldDecorator('title:subText', {})(<Input style={{ marginBottom: 8 }} />)}
+              {getFieldDecorator('title:subtext', {})(<Input style={{ marginBottom: 8 }} />)}
             </Panel>
             <Panel header="X 轴设置" key="1">
               <div style={{ display: 'flex', marginBottom: 8 }}>

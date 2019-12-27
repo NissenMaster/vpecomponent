@@ -31,7 +31,6 @@ export const TitleTag = ({ text, iconType }) => (
 
 // 设置图标 option
 export const setOption = (option, chart, defaultOption) => {
-  console.log(`this.option`, option)
   const resizeOption = option && JSON.stringify(option) !== '{}' ? option : defaultOption;
   chart.setOption && chart.setOption(resizeOption);
 };

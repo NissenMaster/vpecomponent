@@ -17,7 +17,7 @@ export const bossOption = {
   title: {
     show: true,
     text: '标题',
-    subText: '副标题',
+    subtext: '副标题',
     textStyle,
   },
   legend: {
@@ -30,6 +30,7 @@ export const bossOption = {
     type: 'category', // 'value' 数值轴 'category' 类目轴 'time' 时间轴 'log' 对数轴
     name: '名称',
     position: 'bottom',
+    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     axisLine,
   },
   yAxis: {

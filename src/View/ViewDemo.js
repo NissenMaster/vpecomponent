@@ -38,15 +38,18 @@ export default class ViewDemo extends React.PureComponent {
     super(props);
     this.state = {
       items: [],
+      globalConfig: {},
     };
   }
 
   componentDidMount() {
     const { pathname } = window.location;
     const data = JSON.parse(localStorage.getItem('BoardComponent'));
+    console.log(`data`, data)
     if (pathname === data.menuUrl) {
       const { componentList } = data;
       this.lxList(componentList);
+      this.setState({ globalConfig: data })
     }
   }
 
@@ -57,37 +60,42 @@ export default class ViewDemo extends React.PureComponent {
   // 增加定时器轮询数据和固定数据渲染
   lxList = (list = []) => {
     list.forEach(async data => {
-      const { dataUrl, isRefresh, refreshInterval } = data.dataConfig || {};
-      if (dataUrl && dataUrl !== '') {
-        if (isRefresh) {
-          const interval = setInterval(() =>
-              fetchRequest(dataUrl).then(res => {
-                const result = optimizeRes(data.type, res || {}, data.option || getDefaultData(data.type));
-                this.setState({
-                  items: list.map(
-                    ele => ele.i === data.i ? { ...ele, option: { ...ele.option || {}, ...result } } : ele
-                  ),
-                });
-                this.childRefMap[data.i].rerender({
-                  height: `calc(100% - ${TITLE_HEIGHT}px)`,
-                  width: '100%',
-                });
-              }),
-            refreshInterval * 1000);
-          this.intervalList.push(interval);
+      if (data.dataConfig) {
+        const { dataUrl, isRefresh, refreshInterval } = data.dataConfig || {};
+        if (dataUrl && dataUrl !== '') {
+          if (isRefresh) {
+            const interval = setInterval(() =>
+                fetchRequest(dataUrl).then(res => {
+                  const result = optimizeRes(data.type, res || {}, data.option || getDefaultData(data.type));
+                  this.setState({
+                    items: list.map(
+                      ele => ele.i === data.i ? { ...ele, option: { ...ele.option || {}, ...result } } : ele
+                    ),
+                  });
+                  this.childRefMap[data.i].rerender({
+                    height: `calc(100% - ${TITLE_HEIGHT}px)`,
+                    width: '100%',
+                  });
+                }),
+              refreshInterval * 1000);
+            this.intervalList.push(interval);
+          }
+          const res = await fetchRequest(dataUrl);
+          const result = optimizeRes(data.type, res || {}, data.option || getDefaultData(data.type));
+          this.setState({
+            items: list.map(
+              ele => ele.i === data.type ? { ...ele, option: { ...ele.option || {}, ...result } } : ele
+            ),
+          });
         }
-        const res = await fetchRequest(dataUrl);
-        const result = optimizeRes(data.type, res || {}, data.option || getDefaultData(data.type));
-        this.setState({
-          items: list.map(
-            ele => ele.i === data.type ? { ...ele, option: { ...ele.option || {}, ...result } } : ele
-          ),
-        });
+      } else {
+        this.setState(({ items }) => ({ items: [...items, data] }));
       }
     });
   };
 
   createElement = (el, index) => {
+    console.log(`el`, el)
     return (
       <div
         key={el.i}
@@ -124,8 +132,10 @@ export default class ViewDemo extends React.PureComponent {
   };
 
   render() {
+    const { globalConfig: { height, width, backgroundColor }, items } = this.state;
+    console.log(`items`, items)
     return (
-      <div ref={this.mainRef} style={{ height: '100vh', backgroundColor: '#161719' }}>
+      <div ref={this.mainRef} style={{ height, width, backgroundColor }}>
         <ResponsiveReactGridLayout
           isDraggable={false}
           isResizable={false}
